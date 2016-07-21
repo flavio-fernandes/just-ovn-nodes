@@ -14,6 +14,7 @@ Incomplete list of links to projects and files used in order to put this repo to
 In a not too far future, there will be a blog page that does much better justice in explaining how to use/deploy this environment. Until then, here are the basic stepping stones.
 
 ### Pre-reqs
+
 - Hypervisor (only tested with Virtualbox)
 - git
 - Vagrant
@@ -29,8 +30,9 @@ Vagrant plugin _vagrant-cachier_ is optional, but will make it quicker to provis
 
 ### Provisioning Steps
 
-    git clone https://github.com/flavio-fernandes/just-ovn-nodes.git
-    cd just-ovn-nodes
+    $ git clone https://github.com/flavio-fernandes/just-ovn-nodes.git
+
+    $ cd just-ovn-nodes
 
 - Optional: Edit the file **provisioning/virtualbox.conf.yml**
 

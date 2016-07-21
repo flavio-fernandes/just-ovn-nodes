@@ -14,8 +14,8 @@ Vagrant.configure(2) do |config|
   # ref: http://stackoverflow.com/questions/14715678/vagrant-insecure-by-default
   # ref: https://www.vagrantup.com/docs/vagrantfile/ssh_settings.html
   config.ssh.insert_key = false
-  config.ssh.paranoid = false
-  config.ssh.keys_only = false
+  ##config.ssh.paranoid = false
+  ##config.ssh.keys_only = false
   config.ssh.shell = "bash -c 'BASH_ENV=/etc/profile exec bash'" # avoids 'stdin: is not a tty' error.
   config.vm.provision "shell", inline: <<-SCRIPT
     printf "%s\n" "#{File.read("#{ENV['HOME']}/.ssh/id_rsa.pub")}" >> /home/vagrant/.ssh/authorized_keys
