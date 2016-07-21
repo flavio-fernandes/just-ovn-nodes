@@ -1,0 +1,193 @@
+#!/bin/bash
+
+# If $NO_EXIT is 1, declares "exit ()".
+# This disables the "exit" builtin by aliasing it to "true".
+[[ $NO_EXIT -eq 1 ]] && exit() { true; } # Function definition in an "and-list".
+
+
+# Build the provider network in OVN. You can enable instances to access
+# external networks such as the Internet by using the IP address of the host
+# vboxnet interface for the provider network (typically vboxnet1) as the
+# gateway for the subnet on the neutron provider network. Also requires
+# enabling IP forwarding and configuring SNAT on the host. See the README for
+# more information.
+provider_setup () {
+    PHYS_DEV=${1-eth2}
+
+    sudo ovs-vsctl --may-exist add-br br-provider -- set bridge br-provider protocols=OpenFlow13
+    ##sudo ovs-vsctl set open . external-ids:ovn-bridge-mappings=${OVN_NET_NAME}:br-provider
+
+    # Save the existing address from $PHYS_DEV and add it to br-provider
+    PROVADDR=$(ip -4 addr show $PHYS_DEV | grep -oP "(?<=inet )[^\s]*(?=\s)")
+    if [[ -n "$PROVADDR" ]] ; then
+        sudo ip addr flush dev $PHYS_DEV
+        sudo ip addr add $PROVADDR dev br-provider
+        sudo ip link set br-provider up
+        sudo ovs-vsctl --may-exist add-port br-provider $PHYS_DEV
+    fi
+}
+
+undo_provider_setup_address () {
+    PHYS_DEV=${1-eth2}
+
+    # Restore the existing address from br-provider and add it to $PHYS_DEV
+    PROVADDR=$(ip -4 addr show br-provider 2>&1 | grep -oP "(?<=inet )[^\s]*(?=\s)") || true
+    if [[ -n "$PROVADDR" ]] ; then
+        sudo ovs-vsctl -- --if-exists del-port br-provider $PHYS_DEV || true
+        sudo ip addr flush dev br-provider
+        sudo ip link set br-provider down
+        sudo ip addr add $PROVADDR dev $PHYS_DEV
+    fi
+    sudo ovs-vsctl --if-exists del-br br-provider || true
+}
+
+# idem potent steps for preparing ovs for ovn affairs
+ovs_open_vswitch_setup () {
+    OVN_DB_IP=$1
+    OVN_SB_DB_PORT=${2-6642}
+
+    if test X"$OVN_DB_IP" = X ; then OVN_DB_IP=$(tac /etc/hosts | awk '/\scentral/ {print $1;exit;}') ; fi
+    if test X"$OVN_DB_IP" = X ; then OVN_DB_IP='127.0.0.1' ; fi
+
+    OVN_SYS_UUID=$(hostname --short)
+    HOST_IP=$(ip -4 addr show eth1 | grep -oP "(?<=inet ).*(?=/)")
+    OVN_SB_REMOTE="tcp:${OVN_DB_IP}:${OVN_SB_DB_PORT}"
+
+    sudo ovs-vsctl --no-wait init
+    sudo ovs-vsctl --no-wait set open_vswitch . system-type="devstack-mock"
+    sudo ovs-vsctl --no-wait set open_vswitch . external-ids:system-id="$OVN_SYS_UUID"
+
+    sudo ovs-vsctl --no-wait set open_vswitch . external-ids:ovn-bridge="br-int"
+    sudo ovs-vsctl --no-wait set open_vswitch . external-ids:ovn-encap-ip="$HOST_IP"
+    sudo ovs-vsctl --no-wait set open_vswitch . external-ids:ovn-encap-type="geneve"
+    sudo ovs-vsctl --no-wait set open_vswitch . external-ids:ovn-remote="$OVN_SB_REMOTE"
+    ##sudo ovs-vsctl --no-wait set open_vswitch . external_ids:ovn−remote−probe−interval=0
+}
+
+# normalize caps and variations of 'yes'
+translate_yes () {
+    local var=$(echo $1 | tr ABCDEFGHIJKLMNOPQRSTUVWXYZ- abcdefghijklmnopqrstuvwxyz_)
+    if test X"$var" = Xtrue || test X"$var" = Xyes ; then
+        echo yes
+    else
+        echo no
+    fi
+}
+
+start_ovn_central () {
+    if [[ -x /etc/init.d/ovn-central ]] ; then
+        sudo service ovn-central start
+    fi
+}
+
+start_openvswitch_switch () {
+    OVN_DB_IP=$1
+    OVN_SB_DB_PORT=$2
+
+    if [[ -x /etc/init.d/openvswitch-switch ]] ; then
+        /etc/init.d/openvswitch-switch status > /dev/null 2>&1
+        if (( $? )) ; then
+            for x in libcrc32c nf_conntrack nf_nat nf_nat_ipv6 vport-geneve ; do
+                sudo modprobe $x
+            done
+            sudo /etc/init.d/openvswitch-switch start
+            provider_setup
+            ovs_open_vswitch_setup $OVN_DB_IP $OVN_DB_PORT
+        fi
+    fi
+}
+
+start_ovn_host () {
+    OVN_DB_IP=$1
+    OVN_SB_DB_PORT=$2
+
+    start_openvswitch_switch $OVN_DB_IP $OVN_SB_DB_PORT
+    if [[ -x /etc/init.d/ovn-host ]] ; then
+        sudo service ovn-host start
+    fi
+}
+
+# start all OVS/OVN services that are installed
+start_ovx_services () {
+    OVN_DB_IP=$1
+    OVN_SB_DB_PORT=$2
+
+    start_ovn_central
+    start_ovn_host $OVN_DB_IP $OVN_SB_DB_PORT
+}
+
+# stop all OVS/OVN services
+stop_ovx_services () {
+    undo_provider_setup_address
+    for x in openvswitch-switch ovn-host ovn-central ; do \
+        if [[ -x /etc/init.d/$x ]] ; then
+            sudo service $x stop || true
+        fi
+    done
+}
+
+# stop OVN services and clear OVS/OVN state
+stop_ovx_services_and_purge_state () {
+    stop_ovx_services
+
+    sudo rm -rf /var/log/openvswitch/*
+    if [[ ! -e /etc/openvswitch.orig.tgz ]] ; then \
+        (cd /etc && sudo tar cvzf openvswitch{.orig.tgz,})
+    fi
+    sudo rm -rf /etc/openvswitch
+    sudo mkdir -pv /etc/openvswitch
+    hostname --short | sudo tee /etc/openvswitch/system-id.conf
+}
+
+# install OVS/OVN packages
+install_ovs_pkgs () {
+    OVN_PKG_DIR=$1
+    INSTALL_OVN_HOST=$(translate_yes ${2-yes})
+    INSTALL_OVN_CENTRAL=$(translate_yes ${3-no})
+
+    if test X"$OVN_PKG_DIR" = Xdefault || [[ -z "$OVN_PKG_DIR" ]] ; then
+        OVN_PKG_DIR='/vagrant/provisioning/pkgs'
+    fi
+
+    set sudo dpkg -i ${OVN_PKG_DIR}/openvswitch-common_*.deb
+
+    # possibly not needed if no ovn packages is installed  ¯\_(ツ)_/¯
+    set "$@" ${OVN_PKG_DIR}/ovn-common_*.deb
+
+    # FIXME(ff): we should not need vswitchd if all we want is to run
+    # northd. See: http://openvswitch.org/pipermail/discuss/2016-July/021911.html
+    set "$@" ${OVN_PKG_DIR}/openvswitch-switch_*.deb
+
+    if test X"$INSTALL_OVN_HOST" = Xyes ; then
+        set "$@" ${OVN_PKG_DIR}/ovn-host_*.deb
+    fi
+    if test X"$INSTALL_OVN_CENTRAL" = Xyes ; then
+        set "$@" ${OVN_PKG_DIR}/ovn-central_*.deb
+    fi
+
+    "$@" || { echo >&2 "$@"; echo >&2 "ERROR: failed to install packages"; exit 1; }
+}
+
+# disable OVS/OVN packages, so they do start automatically
+disable_ovs_pkgs () {
+    # FIXME(ff): this is definitely not systemd ready
+    for x in openvswitch-switch ovn-host ovn-central ; do \
+        for f1 in $(sudo find /etc -name "S*${x}") ; do \
+        f2=$(echo $f1 | sed 's@\(/etc/rc.*/\)S\([0-9]*.*\)@\1K\2@')
+            if [[ "$f1" != "$f2" ]] ; then
+				echo "renaming $f1 as $f2"
+                sudo mv $f1 $f2
+            fi
+        done
+    done
+}
+
+# uninstall OVS/OVN packages
+uninstall_ovs_pkgs () {
+    stop_ovx_services
+    sudo rm -rf /var/log/openvswitch /etc/openvswitch
+    sudo dpkg --purge ovn-host ovn-central openvswitch-switch \
+        ovn-common openvswitch-common
+    # Note: dpkg is good on getting rid of files like /etc/rc2.d/K20ovn-central
+    #       so no further need to have them removed in this function.
+}
