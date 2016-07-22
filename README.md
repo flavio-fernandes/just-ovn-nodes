@@ -31,20 +31,19 @@ Vagrant plugin _vagrant-cachier_ is optional, but will make it quicker to provis
 ### Provisioning Steps
 
     $ git clone https://github.com/flavio-fernandes/just-ovn-nodes.git
-
     $ cd just-ovn-nodes
 
 - Optional: Edit the file **provisioning/virtualbox.conf.yml**
 
 Adjust the parameters **ovn_repo** and **ovn_branch** to pick up the version of OVS/OVN you want. If you use the default, it will pick up a branch from a forked GitHub OVS repo that is a replica of original OVS master, but not the latest and greatest.
 
-By default, there will be 1 ovn database node and 3 compute nodes in the setup.
+By default, there will be 1 OVN database node and 3 compute nodes in the setup.
 However, node compute3 will not start automatically, unless you change the **autostart** parameter, or explicitly call **vagrant up compute3**.
 
 If you want the OVN database node to also be used as a compute node, make sure
 to set the **install_ovn_controller** parameter to _yes_.
 
-Since we are not provisioning CMS, the VMS require a lot less memory. In the provisioning steps, the OVN database VM (aka central) will build packages and store them in the directory _provisioning/pkgs_. All other VMS will simply install these packages instead of having to build ovn from scratch.
+Since we are not provisioning CMS, the VMS require a lot less memory. In the provisioning steps, the OVN database VM (aka central) will build packages and store them in the directory _provisioning/pkgs_. All other VMS will simply install these packages instead of having to build OVN from scratch.
 
     vagrant up
 
@@ -55,18 +54,19 @@ Since we are not provisioning CMS, the VMS require a lot less memory. In the pro
     # snapshot vms using sahara
     vagrant sandbox on
 
-At this point, you can start ovn cluster by running the script from the db vm:
+At this point, you can start OVN cluster by running the script from the db vm:
 
     $ vagrant ssh
     vagrant@central:~$ /vagrant/scripts/setup-ovn-cluster.sh
 
 The output will look like this: https://gist.github.com/a54e9289b0838b9391fd30d4b58d7536
 
-Open separate terminal sessions and ssh to other VMS so you can look at what OVS has to say. Note that central will just run OVN db, unless you changed the **install_ovn_controller** parameter to _yes_.
+Open separate terminal sessions and ssh to other VMS so you can look at what OVS flow tables in each one of them. All OVN related info can be obtained from the central VM.
 
-    $ vagrant ssh compute1   ;  # or compute2
+    $ vagrant ssh compute1   ;  # or central, or compute2
 
-At this point, you can try out the various scripts in **/vagrant/scripts/tutorial**. You will want to run them from the _central_ node.
+At this point, you can try out the various scripts in **/vagrant/scripts/tutorial**. You will
+need to run them from the _central_ node.
 Here is an example of what to expect when doing the **env1** script:
 
     $ vagrant ssh central
@@ -97,4 +97,3 @@ Lastly, this is how you can easily revert the cluster to a clean state,
 assuming you have **sahara** and saved a snapshot after the initial provisioning.
 
     $ vagrant sandbox rollback
-
