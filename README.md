@@ -45,14 +45,14 @@ to set the **install_ovn_controller** parameter to _yes_.
 
 Since we are not provisioning CMS, the VMS require a lot less memory. In the provisioning steps, the OVN database VM (aka central) will build packages and store them in the directory _provisioning/pkgs_. All other VMS will simply install these packages instead of having to build OVN from scratch.
 
-    vagrant up
+    $ vagrant up
 
     # wait about 10 mins...
     # if you want, you can explicitly bring compute3 up by using
     # vagrant up compute3
 
     # snapshot vms using sahara
-    vagrant sandbox on
+    $ vagrant sandbox on
 
 At this point, you can start OVN cluster by running the script from the db vm:
 
