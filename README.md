@@ -61,7 +61,7 @@ At this point, you can start OVN cluster by running the script from the db vm:
 
 The output will look like this: https://gist.github.com/a54e9289b0838b9391fd30d4b58d7536
 
-Open separate terminal sessions and ssh to all VMS, so you can inspect the flow tables. OVN related info can be obtained at the central VM. OVS ports used to represent tenant VMs are be added using linux namespaces, similar to what is done in OpenStack.
+Open separate terminal sessions and ssh to all VMS, so you can inspect the flow tables. OVN related info can be obtained at the central VM. OVS ports used to represent tenant VMs are added using linux namespaces, similar to what is done in OpenStack.
 
     $ vagrant ssh compute1   ;  # or central, or compute2
 
