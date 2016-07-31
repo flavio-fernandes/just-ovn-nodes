@@ -58,29 +58,26 @@ do_create_ns_port () {
     devname="tap${ns_idx}"
 
     sudo ip netns add $ns
-    sudo ip link add "${devname}_l" type veth peer name "${devname}_c"
 
-    sudo ovs-vsctl --may-exist add-port $bridge ${devname}_l -- \
-        set Interface ${devname}_l external-ids:iface-id=$logical_id || \
-    { echo >&2 "could not add ${devname}_l to $bridge" ; sudo ip link delete "${devname}_l" ; exit 1; }
-
-    sudo ip link set "${devname}_l" up
+    sudo ovs-vsctl add-port $bridge $devname -- \
+        set Interface $devname type=internal -- \
+        set Interface $devname external-ids:iface-id=$logical_id || \
+    { echo >&2 "could not add $devname to $bridge" ; exit 1; }
 
     # attach port to namespace and rename to eth0
-    sudo ip link set "${devname}_c" netns $ns
-    sudo ip netns exec $ns ip link set dev "${devname}_c" name eth0
+    sudo ip link set $devname netns $ns
 
-    sudo ip netns exec $ns ip link set dev eth0 up
-    sudo ip netns exec $ns ip link set dev eth0 mtu 1440
+    sudo ip netns exec $ns ip link set dev $devname up
+    sudo ip netns exec $ns ip link set dev $devname mtu 1440
 
     if test X"$ip_addr" = Xdhcp ; then
-        sudo ip netns exec $ns dhclient -nw eth0
+        sudo ip netns exec $ns dhclient -nw $devname
     else
-        [ -n "$ip_addr" ] && sudo ip netns exec $ns ip addr add $ip_addr dev eth0
+        [ -n "$ip_addr" ] && sudo ip netns exec $ns ip addr add $ip_addr dev $devname
     fi
 
     if test X"$mac_addr" != Xany ; then
-        [ -n "$mac_addr" ] && sudo ip netns exec $ns ip link set eth0 address $mac_addr
+        [ -n "$mac_addr" ] && sudo ip netns exec $ns ip link set $devname address $mac_addr
     fi
 
     if test X"$ip_gw" != Xnone ; then
