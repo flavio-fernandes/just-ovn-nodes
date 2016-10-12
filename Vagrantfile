@@ -64,10 +64,10 @@ Vagrant.configure(2) do |config|
     config.vm.provider "virtualbox" do |vb|
        vb.memory = vagrant_config['ovncentral']['memory']
        vb.cpus = vagrant_config['ovncentral']['cpus']
-       vb.customize [
-           'modifyvm', :id,
-           '--nicpromisc3', "allow-all"
-          ]
+       vb.customize ["modifyvm", :id, "--nictype1", "virtio"]
+       vb.customize ["modifyvm", :id, "--nictype2", "virtio"]
+       vb.customize ["modifyvm", :id, "--nictype3", "virtio"]
+       vb.customize ['modifyvm', :id, "--nicpromisc3", "allow-all"]
        vb.customize [
            "guestproperty", "set", :id,
            "/VirtualBox/GuestAdd/VBoxService/--timesync-set-threshold", 10000
@@ -90,10 +90,10 @@ Vagrant.configure(2) do |config|
       config.vm.provider "virtualbox" do |vb|
         vb.memory = vagrant_config[compute_id]['memory']
         vb.cpus = vagrant_config[compute_id]['cpus']
-        vb.customize [
-                      'modifyvm', :id,
-                      '--nicpromisc3', "allow-all"
-                     ]
+        vb.customize ["modifyvm", :id, "--nictype1", "virtio"]
+        vb.customize ["modifyvm", :id, "--nictype2", "virtio"]
+        vb.customize ["modifyvm", :id, "--nictype3", "virtio"]
+        vb.customize ['modifyvm', :id, "--nicpromisc3", "allow-all"]
         vb.customize [
                       "guestproperty", "set", :id,
                       "/VirtualBox/GuestAdd/VBoxService/--timesync-set-threshold", 10000

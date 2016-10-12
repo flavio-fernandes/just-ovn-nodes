@@ -70,6 +70,10 @@ do_create_ns_port () {
     sudo ip link set "${devname}_c" netns $ns
     sudo ip netns exec $ns ip link set dev "${devname}_c" name eth0
 
+    if test X"$mac_addr" != Xany ; then
+        [ -n "$mac_addr" ] && sudo ip netns exec $ns ip link set eth0 address $mac_addr
+    fi
+
     sudo ip netns exec $ns ip link set dev eth0 up
     sudo ip netns exec $ns ip link set dev eth0 mtu 1440
 
@@ -77,10 +81,6 @@ do_create_ns_port () {
         sudo ip netns exec $ns dhclient -nw eth0
     else
         [ -n "$ip_addr" ] && sudo ip netns exec $ns ip addr add $ip_addr dev eth0
-    fi
-
-    if test X"$mac_addr" != Xany ; then
-        [ -n "$mac_addr" ] && sudo ip netns exec $ns ip link set eth0 address $mac_addr
     fi
 
     if test X"$ip_gw" != Xnone ; then

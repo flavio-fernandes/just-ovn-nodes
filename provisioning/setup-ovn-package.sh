@@ -30,9 +30,8 @@ stat -t ${OVN_PKG_DIR}/*.deb > /dev/null 2>&1 || OVN_FORCE_BUILD='yes'
 
 if test X"$OVN_FORCE_BUILD" = Xyes ; then
     OVN_DEP_PKGS="build-essential fakeroot git graphviz autoconf automake bzip2 \
-                  openssl libssl-dev libtool python-all debhelper procps \
-                  dh-autoreconf python-qt4 python-twisted-conch \
-                  python-zopeinterface python-six"
+                  debhelper dh-autoreconf libssl-dev libtool openssl procps \
+                  python-all python-qt4 python-twisted-conch python-zopeinterface python-six"
 
     sudo apt-get install -qy $OVN_DEP_PKGS
 
@@ -44,6 +43,14 @@ if test X"$OVN_FORCE_BUILD" = Xyes ; then
      dpkg-checkbuilddeps && \
      DEB_BUILD_OPTIONS="parallel=${NUM_CPUS} nocheck" fakeroot debian/rules binary) || \
     { echo >&2 "ovn build was bad"; exit 1; }
+
+    # Build kernel modules using module-assistant
+    sudo apt-get install -qy module-assistant
+    (sudo dpkg -i openvswitch-datapath-source_2*_all.deb && \
+     sudo m-a --text-mode prepare && \
+     sudo m-a --text-mode build openvswitch-datapath) ||
+    { echo >&2 "Unable to build kernel modules"; exit 1; }
+    cp -v /usr/src/openvswitch-datapath-module-*.deb .
 
     rm -rf ${OVN_PKG_DIR}/*.deb
     cp -v ./*.deb $OVN_PKG_DIR
