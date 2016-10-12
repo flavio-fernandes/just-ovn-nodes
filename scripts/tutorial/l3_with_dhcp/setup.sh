@@ -55,12 +55,14 @@ sudo ovn-nbctl lsp-set-port-security inside-vm4 "02:ac:10:ff:01:95 172.16.255.19
 
 dmzDhcp="$(sudo ovn-nbctl create DHCP_Options cidr=172.16.255.128/26 \
 options="\"server_id\"=\"172.16.255.129\" \"server_mac\"=\"02:ac:10:ff:01:29\" \
-       \"lease_time\"=\"3600\" \"router\"=\"172.16.255.129\"")"
+         \"lease_time\"=\"3600\" \"router\"=\"172.16.255.129\" \
+         \"dns_server\"=\"10.10.0.1\"")"
 echo $dmzDhcp
 
 insideDhcp="$(sudo ovn-nbctl create DHCP_Options cidr=172.16.255.192/26 \
 options="\"server_id\"=\"172.16.255.193\" \"server_mac\"=\"02:ac:10:ff:01:93\" \
-          \"lease_time\"=\"3600\" \"router\"=\"172.16.255.193\"")"
+          \"lease_time\"=\"3600\" \"router\"=\"172.16.255.193\" \
+          \"dns_server\"=\"10.10.0.1\"")"
 echo $insideDhcp
 
 sudo ovn-nbctl dhcp-options-list
