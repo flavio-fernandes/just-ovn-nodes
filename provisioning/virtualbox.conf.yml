@@ -2,7 +2,7 @@
 box: "ubuntu/trusty64"
 provider_network: "10.10.0.0/16"
 ovn_repo: http://github.com/flavio-fernandes/ovs.git
-ovn_branch: ovnBlog1
+ovn_branch: sfc
 ovn_pkg_dir: /vagrant/provisioning/pkgs
 ovncentral:
   autostart: yes
