@@ -1,0 +1,1 @@
+../sfc/setup.sh

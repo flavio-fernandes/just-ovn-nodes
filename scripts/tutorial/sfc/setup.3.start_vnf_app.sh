@@ -13,12 +13,10 @@ do_start_nfvapp () {
     VMNAME=$1
     NSNAME=$2
 
-    mkdir -pv /tmp/nvfapp.log
-    cd /tmp/nvfapp.log
-    sudo ip netns exec ${NSNAME} nohup /vagrant/nfvapp/nfvapp >log.txt 2>&1 &
+    mkdir -pv /tmp/nvfapp_logs/
+    cd /tmp/nvfapp_logs/
+    sudo ip netns exec ${NSNAME} nohup /vagrant/nfvapp/nfvapp >log_${VMNAME}.txt 2>&1 &
 }
 
 # TODO: need a handy tool to convert 'vm' to the namespace
-rpcsh -h compute3 -m do_start_nfvapp -- nvfvm ns3
-
-
+rpcsh -h compute3 -m do_start_nfvapp -- vnf1 ns3
