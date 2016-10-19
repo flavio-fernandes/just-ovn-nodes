@@ -13,10 +13,6 @@ set -o xtrace
 # lsp-chain-add LSWITCH [LSP-CHAIN]
 sudo ovn-nbctl lsp-chain-add sw0 chain1
 
-# Create a port group
-# lsp-pair-group-add LSP-CHAIN LSP-PAIR-GROUP-NAME
-sudo ovn-nbctl lsp-pair-group-add chain1 pgrp1
-
 # Create two logical ports on "sw0" to be used by NFV1
 sudo ovn-nbctl lsp-add sw0 sw0-port-nvf1-in
 sudo ovn-nbctl lsp-add sw0 sw0-port-nvf1-out
@@ -31,6 +27,11 @@ sudo ovn-nbctl lsp-set-port-security sw0-port-nvf1-out
 # Create a port pair
 # lsp-pair-add LSWITCH LIN-PORT LOUT-PORT [LSP-PAIR-NAME]
 sudo ovn-nbctl lsp-pair-add sw0 sw0-port-nvf1-in sw0-port-nvf1-out nfv1ppair
+
+# Create a port group
+# lsp-pair-group-add LSP-CHAIN LSP-PAIR-GROUP-NAME
+sudo ovn-nbctl lsp-pair-group-add chain1 pgrp1
+sudo ovn-nbctl lsp-pair-group-add-port-pair pgrp1 nfv1ppair
 
 # Create chain classifier -- TODO: to be turned into ACL
 # lflow-classifier-add LSP-CHAIN LIN-PORT [LFLOW-CLASSIFIER-NAME]
