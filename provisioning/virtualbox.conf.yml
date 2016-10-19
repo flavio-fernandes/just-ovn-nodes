@@ -1,7 +1,7 @@
 ---
 box: "ubuntu/trusty64"
 provider_network: "10.10.0.0/16"
-ovn_repo: http://github.com/flavio-fernandes/ovs.git
+ovn_repo: http://github.com/doonhammer/ovs.git
 ovn_branch: sfc
 ovn_pkg_dir: /vagrant/provisioning/pkgs
 ovncentral:
@@ -33,7 +33,7 @@ ovncompute2:
   cpus: 1
   mtu: 1500
 ovncompute3:
-  autostart: no
+  autostart: yes
   short_name: "compute3"
   host_name: "compute3.ovn.dev"
   ip: "192.168.33.33"
