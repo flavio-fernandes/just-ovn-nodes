@@ -27,6 +27,7 @@ IP_GW=$5
 OVS_BRIDGE=$6
 
 if [ -z "$MAC_ADDRESS" ] ; then MAC_ADDRESS=any ; fi
+if [ -z "$IP_ADDRESS" ] ; then IP_ADDRESS=none ; fi
 if [ -z "$IP_GW" ] ; then IP_GW=none ; fi
 
 if test $(hostname --short) != "central" ; then
@@ -80,7 +81,9 @@ do_create_ns_port () {
     if test X"$ip_addr" = Xdhcp ; then
         sudo ip netns exec $ns dhclient -nw eth0
     else
-        [ -n "$ip_addr" ] && sudo ip netns exec $ns ip addr add $ip_addr dev eth0
+	if test X"$ip_addr" != Xnone ; then
+	    sudo ip netns exec $ns ip addr add $ip_addr dev eth0
+	fi
     fi
 
     if test X"$ip_gw" != Xnone ; then

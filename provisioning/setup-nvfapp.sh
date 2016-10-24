@@ -17,4 +17,4 @@ go get github.com/google/gopacket
 
 # Build nvfapp
 cd /vagrant/nfvapp && go build nfvapp.go
-
+cd /vagrant/nfvapp && go build nfvapp_one_dev.go
