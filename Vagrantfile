@@ -87,6 +87,7 @@ Vagrant.configure(2) do |config|
       :args => "#{vagrant_config[compute_id]['mtu']} #{setup_base_common_args}"
       ovncompute.vm.provision "shell", path: "provisioning/setup-ovn-package.sh", privileged: false,
       :args => "#{vagrant_config['ovn_repo']} #{vagrant_config['ovn_branch']} #{vagrant_config[compute_id]['cpus']} yes no #{vagrant_config['ovn_pkg_dir']} no"
+      ovncompute.vm.provision "shell", path: "provisioning/setup-extras.sh", privileged: false
       config.vm.provider "virtualbox" do |vb|
         vb.memory = vagrant_config[compute_id]['memory']
         vb.cpus = vagrant_config[compute_id]['cpus']
