@@ -1,0 +1,74 @@
+OVSCon 2016 -- demo cheat sheet
+
+1) show host vms: central, compute{1.2.3}
+2) show tenants and where we place them in host
+3) show vnfs
+4) show desired chains
+5) show simple app that gets ran inside each vnf
+6) show ovn-nbctl commands used to create port pairs, port groups, chains, etc
+7) use ovn-trace to confirm a chain
+8) send packet from vms to see activity in vnf app logs
+
+Link to scripts and materials used: http://bit.ly/2eJ79AN
+
+ovn-northd.c implementation used: http://bit.ly/2fct4kK
+
+===
+Steps 1 thru 4: use slide (ovn_sfc_ovsCon2016.graffle)
+
+===
+Hints for step 5:
+grep -n --color -E 'processPackets|BPF|$' /vagrant/nfvapp/nfvapp.go
+
+===
+Hints for step 6:
+
+less /vagrant/scripts/tutorial/sfc.ovscon2016/setup.2.sfc.sh
+https://gist.github.com/8d81996b132d13bc4e4901a8001a8784
+
+/vagrant/scripts/setup-ovn-cluster.sh
+
+cd /vagrant/scripts/tutorial/sfc.ovscon2016 && \
+ ./setup.sh && ./setup.2.sfc.sh && ./setup.3.nfvapp.sh
+
+sudo ovn-nbctl show
+
+sudo ovn-sbctl show
+
+sudo ovn-nbctl --help | grep lsp-chain
+
+sudo ovn-nbctl lsp-chain-list sw0
+
+sudo ovn-nbctl lsp-chain-show chain1_2
+
+sudo ovn-nbctl lsp-chain-show chain2_1
+
+sudo ovn-sbctl lflow-list | grep --color -E 'Datapath|ls_in_acl|ls_in_chain|$'
+
+===
+Hints for step 7:
+
+PKT_COMMON='&& eth.dst == 00:00:00:00:00:02 && eth.src == 00:00:00:00:00:01 && ip4.dst == 1.0.0.2 && ip4.src == 1.0.0.1 && ip.ttl == 9'
+PKT_PING="$PKT_COMMON && icmp4.type == 8 && icmp4.code == 0"
+
+PKT_IN='inport == "sw0-port1"'
+sudo ovn-trace sw0 "$PKT_IN $PKT_PING"
+
+PKT_IN='inport == "sw0-port-vnfa-inout"'
+sudo ovn-trace sw0 "$PKT_IN $PKT_PING"
+
+PKT_IN='inport == "sw0-port-vnfb-out"'
+sudo ovn-trace sw0 "$PKT_IN $PKT_PING"
+
+===
+Hints for step 8:
+
+-=- compute3
+
+tail -F /tmp/nvfapp_logs/log_vnf_?.txt
+
+-=- compute1
+
+sudo ip netns exec ns1 ping -c 1 1.0.0.2
+sudo ip netns exec ns1 ping -c 1 1.0.0.3
+

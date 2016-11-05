@@ -21,8 +21,8 @@ sudo ovn-nbctl lsp-set-addresses ls2-port1 "00:00:00:00:00:02 192.168.2.10"
 # Set up port security for the two logical ports.  This ensures that
 # the logical port mac address we have configured is the only allowed
 # source and destination mac address for these ports.
-sudo ovn-nbctl lsp-set-port-security ls1-port1 00:00:00:00:00:01
-sudo ovn-nbctl lsp-set-port-security ls2-port1 00:00:00:00:00:02
+sudo ovn-nbctl lsp-set-port-security ls1-port1 "00:00:00:00:00:01 192.168.1.10"
+sudo ovn-nbctl lsp-set-port-security ls2-port1 "00:00:00:00:00:02 192.168.2.10"
 
 # Create ports on the local OVS bridge, br-int.
 ## create-ns-port.sh <NODE> <OVN_LSP> <MAC> <IP/MASK> <IP_GW>

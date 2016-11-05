@@ -20,5 +20,5 @@ do_start_nfvapp () {
 
 # TODO: need a handy tool to convert 'vm' to the namespace
 rpcsh -h compute3 -m do_start_nfvapp -- vnf1 ns3
-rpcsh -h compute3 -m do_start_nfvapp -- vnf2 ns4
+rpcsh -h compute1 -m do_start_nfvapp -- vnf2 ns4
 
