@@ -77,6 +77,11 @@ translate_yes () {
 start_ovn_central () {
     if [[ -x /etc/init.d/ovn-central ]] ; then
         sudo service ovn-central start
+
+        # In Open vSwitch 2.7, you need to additionally run the following commands to open up TCP ports
+        # to access the OVN databases.
+        sudo ovn-nbctl set-connection ptcp:6641 || :
+        sudo ovn-sbctl set-connection ptcp:6642 || :
     fi
 }
 
@@ -151,6 +156,11 @@ install_ovs_pkgs () {
 
     sudo apt-get -y install python-six python2.7
     set sudo dpkg -i ${OVN_PKG_DIR}/openvswitch-datapath-module-*.deb
+
+    # also install libopenvswitch, if such has been built
+    if ls ${OVN_PKG_DIR}/libopenvswitch_*.deb 1> /dev/null 2>&1; then
+        set "$@" ${OVN_PKG_DIR}/libopenvswitch_*.deb
+    fi
 
     set "$@" ${OVN_PKG_DIR}/openvswitch-common_*.deb
 
