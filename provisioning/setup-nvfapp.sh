@@ -1,5 +1,8 @@
 #!/bin/bash
 
+set -x
+set -o errexit
+
 sudo apt install -y golang git
 
 mkdir -pv /home/vagrant/go
@@ -14,6 +17,9 @@ sudo apt install -y libpcap-dev
 
 # Get the gopacket package from GitHub
 go get github.com/google/gopacket
+
+cd /home/vagrant/go/src/github.com/google/gopacket && \
+git checkout v1.1.12
 
 # Build nvfapp
 cd /vagrant/nfvapp && go build nfvapp.go
