@@ -1,8 +1,8 @@
 ---
 box: "ubuntu/trusty64"
 provider_network: "10.10.0.0/16"
-flaviof_ovn_repo: http://github.com/flavio-fernandes/ovs.git
-ovn_repo: http://github.com/doonhammer/ovs.git
+john_ovn_repo: http://github.com/doonhammer/ovs.git
+ovn_repo: http://github.com/flavio-fernandes/ovs.git
 ovn_branch: sfc.v2
 ovn_pkg_dir: /vagrant/provisioning/pkgs
 ovncentral:

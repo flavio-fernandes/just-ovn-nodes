@@ -34,12 +34,10 @@ Vagrant.configure(2) do |config|
     config.cache.scope = :box
   end
 
-  # update kernel and reload. This is needed so the geneve and vport_geneve modules
-  # become available, while using a stock trusty distro
   config.vm.provision "shell", inline: <<-SCRIPT
-    apt-get update && sudo apt-get install -y linux-generic-lts-xenial
+    apt-get update
   SCRIPT
-  config.vm.provision :reload
+  # config.vm.provision :reload
 
   # Use the ipaddr library to calculate the netmask of a given network
   net = IPAddr.new vagrant_config['provider_network']
