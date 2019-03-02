@@ -154,7 +154,7 @@ install_ovs_pkgs () {
         OVN_PKG_DIR='/vagrant/provisioning/pkgs'
     fi
 
-    sudo apt-get -y install python-six python2.7
+    sudo apt-get -y install python-six python2.7 libunbound-dev
     set sudo dpkg -i ${OVN_PKG_DIR}/openvswitch-datapath-module-*.deb
 
     # also install libopenvswitch, if such has been built
